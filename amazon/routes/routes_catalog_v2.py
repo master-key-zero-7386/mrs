@@ -1,0 +1,194 @@
+# ======================================================
+# Copyright (c) 2026 ZSSS
+# All Rights Reserved.
+# ------------------------------------------------------
+# ファイル名: amazon/routes_catalog_v2.py
+# 目的: catalog用統括ファイル（再設計・正テンプレ）
+# =======================================================
+
+import os
+import sqlite3
+from datetime import datetime
+from datetime import datetime, timedelta
+from amazon.db import get_conn
+
+from amazon.adapters.amazon_adapter import AmazonAdapter
+from amazon.adapters.catalog_adapter_home import CatalogAdapterHome
+from amazon.adapters.catalog_adapter_region import CatalogAdapterRegion
+from amazon.adapters.catalog_normalized_adapter import NormalizedCatalogAdapter
+from amazon.adapters.listed_items_update_adapter import ListedItemsUpdate
+from amazon.guard.guard_429 import is_blocked 
+from amazon.utils.brand_gate_store import save_brand_gate_result
+
+DB_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "db")  
+
+# --- ▼ SECTION 01: HOME Catalog 正規更新 ▼ ---
+def update_home_catalog(*, user_id: int, asin: str, country_code: str):
+    # === 01-1: HOME marketplace_id 確定 ===
+    listed_db = os.path.join(DB_DIR, f"a_{country_code.lower()}_listed_items.db")
+    conn = get_conn(f"a_{country_code.lower()}_listed_items.db")
+
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT home_marketplace_id
+            FROM listed_items
+            WHERE user_id = %s
+              AND asin = %s
+            LIMIT 1
+        """, (user_id, asin))
+        row = cur.fetchone()
+    finally:
+        conn.close()
+
+    if not row:
+        raise RuntimeError("home_marketplace_id not found in listed_items")
+
+    home_marketplace_id = row["home_marketplace_id"]
+
+    # === 01-2: HOME Catalog raw 取得（API） ===
+    base = AmazonAdapter(
+        user_id=user_id,
+        country_code=country_code,
+        marketplace_id=home_marketplace_id,
+    )
+    adapter = CatalogAdapterHome(parent_adapter=base)
+    result = adapter.get_full_catalog_item(asin)    
+    raw = result.get("raw")
+
+
+    # === 01-3: NORMALIZE（HOME） ===
+    normalizer = NormalizedCatalogAdapter(parent_adapter=adapter)
+    normalized = {
+        "home_title":         normalizer._normalize_title(raw),
+        "home_brand":         normalizer._normalize_brand(raw),
+        "home_manufacturer":  normalizer._normalize_manufacturer(raw),
+        "image_url":          normalizer._normalize_home_image_url(raw),
+    }
+    normalized.update(normalizer._normalize_dimensions_weight(raw))
+
+    # === 01-4: listed_items 更新（HOME） ===
+    listed_db = os.path.join(DB_DIR, f"a_{country_code.lower()}_listed_items.db")
+    updater = ListedItemsUpdate(base_dir=DB_DIR)
+    updater.update_home_from_catalog_normalized(
+        listed_db=listed_db,
+        user_id=user_id,
+        asin=asin,
+        marketplace_id=home_marketplace_id,
+        normalized=normalized,
+    )
+
+    # --- ▼ TTL更新（HOME CATALOG） ▼ ---
+    cache_db = os.path.join(DB_DIR, "a_catalog_cache.db")
+
+    conn = get_conn("a_catalog_cache.db")
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE catalog_cache
+            SET h_catalog_ttl_at = %s
+            WHERE asin = %s
+            AND home_marketplace_id = %s
+        """, (
+            datetime.utcnow().isoformat(),
+            asin,
+            home_marketplace_id
+        ))
+        conn.commit()
+    finally:
+        conn.close()
+
+    return {
+        "status": "ok",
+        "asin": asin,
+        "country_code": country_code,
+        "source": result.get("source"),
+    }
+
+# --- ▼ SECTION 01: REGION Catalog 正規更新 ▼ ---
+def update_region_catalog(*, user_id: int, asin: str, country_code: str):
+    # === 01-01: REGION marketplace_id 確定 ===
+    listed_db = os.path.join(DB_DIR, f"a_{country_code.lower()}_listed_items.db")
+
+    conn = get_conn(f"a_{country_code.lower()}_listed_items.db")
+
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT region_marketplace_id
+            FROM listed_items
+            WHERE user_id = %s
+              AND asin = %s
+            LIMIT 1
+        """, (user_id, asin))
+        row = cur.fetchone()
+    finally:
+        conn.close()
+
+    if not row:
+        raise RuntimeError("region_marketplace_id not found in listed_items")
+
+    region_marketplace_id = row["region_marketplace_id"]
+
+    # === 01-02: REGION Catalog raw 取得（API） ===
+    base = AmazonAdapter(
+        user_id=user_id,
+        country_code=country_code,
+        marketplace_id=region_marketplace_id,
+    )
+    adapter = CatalogAdapterRegion(parent_adapter=base)
+
+    result = adapter.get_full_catalog_item(asin)
+
+
+    raw = result.get("raw")
+
+    # === 01-03: NORMALIZE（REGION） ===
+    normalizer = NormalizedCatalogAdapter(parent_adapter=adapter)
+    normalized = {
+        "region_title":         normalizer._normalize_title(raw),
+        "region_brand":         normalizer._normalize_brand(raw),
+        "region_manufacturer":  normalizer._normalize_manufacturer(raw),
+    }
+    normalized.update(normalizer._normalize_dimensions_weight(raw))
+
+
+    # === 01-04: listed_items 更新（REGION） ===
+    listed_db = os.path.join(DB_DIR, f"a_{country_code.lower()}_listed_items.db")
+    updater = ListedItemsUpdate(base_dir=DB_DIR)
+    updater.update_region_from_catalog_normalized(
+        listed_db=listed_db,
+        user_id=user_id,
+        asin=asin,
+        region=country_code.lower(),
+        region_marketplace_id=region_marketplace_id,
+        normalized=normalized,
+    )
+
+    # === 01-05 TTL更新（REGION CATALOG） ===
+    cache_db = os.path.join(DB_DIR, "a_catalog_cache.db")
+    conn = get_conn("a_catalog_cache.db")
+
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE catalog_cache
+            SET r_catalog_ttl_at = %s
+            WHERE asin = %s
+            AND region_marketplace_id = %s
+        """, (
+            datetime.utcnow().isoformat(),
+            asin,
+            region_marketplace_id
+        ))
+        conn.commit()
+    finally:
+        conn.close()
+
+    return {
+        "status": "ok",
+        "asin": asin,
+        "country_code": country_code,
+        "source": result.get("source"),
+    }
+

@@ -274,6 +274,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (!tokenEl || !linkBtn) return;
 
+        // 動作安定せずoauth自動連携認証を停止
         // // ==== ▼ 連携（Amazon OAuth 開始）===
         // if (!tokenEl.value) {
         //     if (!marketplace) return;

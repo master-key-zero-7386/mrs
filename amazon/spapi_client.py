@@ -117,8 +117,9 @@ def real_signed_request(method, path, params, host, json=None, cfg=None, user_id
     )
     aws_session    = os.getenv("AWS_SESSION_TOKEN")  # 任意
     
-    if not aws_access_key or not aws_secret_key:
-        raise RuntimeError("AWS クレデンシャル未設定（AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY）")
+    # LWA不要によりコメントアウト
+    # if not aws_access_key or not aws_secret_key:
+    #     raise RuntimeError("AWS クレデンシャル未設定（AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY）")
 
     # エンドポイントから署名リージョンを推定
     if "-na." in host:

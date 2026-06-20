@@ -51,3 +51,6 @@ uploads/
 
 # Driver
 chromedriver*.exe
+
+# Local test files
+local_tools/

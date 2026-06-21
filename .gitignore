@@ -40,9 +40,6 @@ Thumbs.db
 # BAT
 *.bat
 
-# Environment
-.env
-
 # uploads
 uploads/
 

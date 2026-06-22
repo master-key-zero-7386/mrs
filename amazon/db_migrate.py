@@ -209,6 +209,7 @@ LISTED_ITEMS_COLUMNS = {
     # --- 価格・関税（編集UI用） ---
     "home_price": "REAL",                           # HOME仕入価格
     "region_price": "REAL",                         # REGION価格
+    "raw_min_price": "REAL",                        # 最安競合価格
     "override_price": "REAL",                       # 出品価格 手動変更用 
     "final_price": "REAL",                          # 最終出品価格
     "profit_rate": "REAL",                          # 利益率
@@ -229,6 +230,7 @@ LISTED_ITEMS_COLUMNS = {
     # --- ステータス関連 ---
     "listing_status": "TEXT DEFAULT ''",            # 出品状態 Status
     "deleting_flag": "INTEGER DEFAULT 0",           # 削除状態フラグ：対TTL用
+    "inactive_reason": "TEXT DEFAULT ''",           # INACTIVE理由    
 
     "created_at": "TEXT",                           # 登録TIME
     "updated_at": "TEXT",                           # 更新TIME

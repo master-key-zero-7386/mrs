@@ -491,9 +491,11 @@ def _build_listing_row_with_shipping(
         "profit_rate": row["profit_rate"],
         "min_price": row["min_price"], 
         "max_price": row["max_price"],
+        "raw_min_price": row["raw_min_price"],        
         "region_brand": row["region_brand"],
         "region_manufacturer": row["region_manufacturer"],
         "information_status": row["information_status"],
+        "inactive_reason": row["inactive_reason"],
         "listing_status": row["listing_status"],
 
         "updated_at": row["updated_at"],
@@ -655,10 +657,12 @@ def _get_listing_by_status(user_id, country_code, status_value, sort="created_de
             COALESCE(profit_rate, NULL) AS profit_rate,
             COALESCE(min_price, NULL) AS min_price,
             COALESCE(max_price, NULL) AS max_price, 
+            COALESCE(raw_min_price, NULL) AS raw_min_price,            
             COALESCE(region_brand, '') AS region_brand,
             COALESCE(region_manufacturer, '') AS region_manufacturer,
             COALESCE(information_status, '') AS information_status,
             COALESCE(listing_status, '') AS listing_status,
+            COALESCE(inactive_reason, '') AS inactive_reason,
             updated_at,
             created_at 
         FROM listed_items

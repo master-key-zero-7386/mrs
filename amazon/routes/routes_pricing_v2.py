@@ -430,6 +430,8 @@ def get_pricing_master_rules():
 @pricing_v2_bp.route("/pricing/update_pricing_master_rules", methods=["POST"])
 def update_pricing_master_rules():
 
+    print(f"user_id={session.get('user_id')}")  # チェック完了後削除
+
     body = request.get_json(force=True) or {}
 
     user_id = body.get("user_id")

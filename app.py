@@ -154,8 +154,8 @@ if __name__ == "__main__":
     db_migrate.main()
 
     # --- TTL・firstは起動時に1回だけ ---
-    # start_first_runner(app)
-    # start_first_regioncheck_runner(app)
+    start_first_runner(app)
+    start_first_regioncheck_runner(app)
     # start_ttl_runner(app)
     start_fx_runner(app)
 

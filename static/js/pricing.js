@@ -303,9 +303,15 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("D");
 
       // --- ▼ Price Check 再計算（API再取得なし） ▼ ---
-      if (lastPricingDebugData) {
-        runPricingDebug();
+      // if (lastPricingDebugData) {
+      //   runPricingDebug();
+      // }      
+
+      if (typeof lastPricingDebugData !== "undefined" && lastPricingDebugData) {
+          runPricingDebug();
       }      
+
+
     });
   }
 

@@ -303,45 +303,46 @@ window.attachRegisterButtons = function (tableSelector) {
 
         if (wrap.querySelector(".register-btn")) return;
 
-        // MRS リスク対策コメントアウト
-        // const registerBtn = document.createElement("button");
-        // registerBtn.className = "btn-blue register-btn";
-        // registerBtn.textContent = "LIST";
+// MRS リスク対策コメントアウト ▼▼▼ ここから
+//         const registerBtn = document.createElement("button");
+//         registerBtn.className = "btn-blue register-btn";
+//         registerBtn.textContent = "LIST";
 
 
-        registerBtn.addEventListener("click", async () => {
-            try {
-                const res = await fetch("/listing/move_to_all", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ asin, country_code, status: currentTab })
-                });
-                const data = await res.json();
-                const status = (data.status || "").toString().trim().toLowerCase();
+//         registerBtn.addEventListener("click", async () => {
+//             try {
+//                 const res = await fetch("/listing/move_to_all", {
+//                     method: "POST",
+//                     headers: { "Content-Type": "application/json" },
+//                     body: JSON.stringify({ asin, country_code, status: currentTab })
+//                 });
+//                 const data = await res.json();
+//                 const status = (data.status || "").toString().trim().toLowerCase();
 
-                if (status === "ok" || status === "success") {
-                    window.showToast("登録完了", "success");
+//                 if (status === "ok" || status === "success") {
+//                     window.showToast("登録完了", "success");
 
-                    if (currentTab === "pre") {
-                        const table = $(tableSelector).DataTable();
-                        table.row($(registerBtn).closest("tr")).remove().draw(false);
-                    } else {
-                        window.loadalllisting(country_code, document.querySelector('input[name="allInfoStatus"]:checked')?.value || 'all'); 
-                    }
-                } else {
-                    console.warn("move_to_all failed:", data);
-                    window.showToast("登録に失敗しました", "error");
-                }
-            } catch (err) {
-                console.error("register error:", err);
-                window.showToast("通信エラーが発生しました", "error");
-            }
-        });
+//                     if (currentTab === "pre") {
+//                         const table = $(tableSelector).DataTable();
+//                         table.row($(registerBtn).closest("tr")).remove().draw(false);
+//                     } else {
+//                         window.loadalllisting(country_code, document.querySelector('input[name="allInfoStatus"]:checked')?.value || 'all'); 
+//                     }
+//                 } else {
+//                     console.warn("move_to_all failed:", data);
+//                     window.showToast("登録に失敗しました", "error");
+//                 }
+//             } catch (err) {
+//                 console.error("register error:", err);
+//                 window.showToast("通信エラーが発生しました", "error");
+//             }
+//         });
 
-        wrap.appendChild(registerBtn); 
+//         wrap.appendChild(registerBtn); 
+// MRS リスク対策コメントアウト ▲▲▲ ここまで
     });
-
 };
+
 
 // --- ▼ SECTION 03: ごみ箱ボタン生成（pre / all 共通） ▼ ---
 window.attachDeleteButtons = function (tableSelector) {
@@ -549,7 +550,7 @@ document.addEventListener("DOMContentLoaded", () => {
         preSearchBtn.addEventListener("click", function () {
 
             const keyword = document.getElementById("preListingSearchInput").value.trim();
-            const detail = document.getElementById("preListingDetailSearch").checked;
+            const detail = false;
             const country_code = document.getElementById("globalRegion")?.value;
             const infoStatus = document.querySelector('input[name="preInfoStatus"]:checked')?.value || 'all';
 

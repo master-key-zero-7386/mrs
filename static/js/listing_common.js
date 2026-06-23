@@ -303,9 +303,10 @@ window.attachRegisterButtons = function (tableSelector) {
 
         if (wrap.querySelector(".register-btn")) return;
 
-        const registerBtn = document.createElement("button");
-        registerBtn.className = "btn-blue register-btn";
-        registerBtn.textContent = "LIST";
+        // MRS リスク対策コメントアウト
+        // const registerBtn = document.createElement("button");
+        // registerBtn.className = "btn-blue register-btn";
+        // registerBtn.textContent = "LIST";
 
 
         registerBtn.addEventListener("click", async () => {

@@ -30,15 +30,7 @@ def submit_listing_service(user_id, country_code, marketplace_id, seller_sku, as
     errors = response.get("errors") if isinstance(response, dict) else None
 
     status = "NG" if errors else "OK"
-
-    save_brand_gate_result(
-        user_id=user_id,
-        marketplace_id=marketplace_id,
-        brand=brand,
-        status=status,
-        reason=str(errors) if errors else None
-    )
-
+    
     return response
 
 # --- SECTION 02: Listing DELETE（From：Delete / ALL listing） ---

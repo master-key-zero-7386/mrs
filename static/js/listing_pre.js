@@ -64,9 +64,6 @@ window.loadprelisting = async function (country_code) {
             });
         },        
 
-        infoCallback: function(settings, start, end, max, total, pre) {
-            return `全 ${total} 件中 ${start} から ${end} 件を表示`; 
-        },
         order: [],
         orderClasses: false,
         stripeClasses: ["zsss-odd", "zsss-even"],
@@ -141,7 +138,7 @@ window.loadprelisting = async function (country_code) {
                                                 border-radius:4px;
                                                 background:#f7f1ea;
                                                 cursor:pointer;
-                                            ">HOME</button>
+                                            ">${row.home_marketplace_host.split(".").pop().toUpperCase()}</button>
                                         </a><a href="${region_host}/dp/${asin}" target="_blank" style="text-decoration:none;">
                                             <button style="
                                                 padding:2px 8px;
@@ -151,12 +148,13 @@ window.loadprelisting = async function (country_code) {
                                                 background:#62c0f7;
                                                 color:#fff;
                                                 cursor:pointer;
-                                            ">REGION</button>
+                                            ">${row.marketplace_host.split(".").pop().toUpperCase()}</button>
                                         </a>
                                         <span class="brand-gate">
                                             ${
                                                 row.brand_gate_status === "OK" ? "🟢" :
                                                 row.brand_gate_status === "NG" ? "🔴" :
+                                                row.brand_gate_status === "APPROVAL" ? "🟡" :
                                                 row.brand_gate_status === "UNKNOWN" ? "⚪" :
                                                 "⚪"
                                             }
